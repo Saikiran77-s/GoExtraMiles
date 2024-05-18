@@ -1,43 +1,10 @@
-// import { Component,HostListener,OnInit } from '@angular/core';
-// import { ImagesarviceService } from '../services/imagesarvice.service';
-// import { CatalogCURDService } from '../services/catalog-curd.service';
-// @Component({
-//   selector: 'app-my-catalouge',
-//   templateUrl: './my-catalouge.component.html',
-//   styleUrls: ['./my-catalouge.component.css']
-// })
-// export class MyCatalougeComponent {
-//   // selectedImage:any| string | ArrayBuffer | null = null;
-//   // selectedTab: number = 1;
-//   // details = JSON.parse(localStorage.getItem('AddItems') || '{}');
-//   // constructor(private imageService: ImagesarviceService){
-//   // }
-//   // imagedata1 :string | null = null;
-//   // imagedata2 :string | null = null;
-//   // imagedata3 :string | null = null;
-//   // HostListener:any
-//   // ngOnInit(){
-//   //   this.imagedata1 = this.imageService.getImageData1();
-//   //   this.imagedata2 = this.imageService.getImageData2();
-//   //   this.imagedata3 = this.imageService.getImageData3();
-//   //  }
-//   //  selectTab(tabNumber: number) {
-//   //   this.selectedTab = tabNumber;
-//   // }
-
-//   constructor(private catalogCurdImg:CatalogCURDService)
-//   {
-
-//   }
-
-
-// }
 import { Component, OnInit } from '@angular/core';
 import { ImagesarviceService } from '../services/imagesarvice.service';
 import { CatalogCURDService } from '../services/catalog-curd.service';
 import { Router } from '@angular/router';
 import { CatalogModel } from '../Model/catalog-model';
 import { EMPTY } from 'rxjs';
+import { UserloginService } from '../services/userlogin.service';
 
 @Component({
   selector: 'app-my-catalouge',
@@ -64,7 +31,9 @@ visible:boolean = false
   imagedata!: string | null;
   time!: boolean;
 
-  constructor(private imageService: ImagesarviceService,private catalogService:CatalogCURDService,private router: Router){
+  constructor(
+    private imageService: ImagesarviceService,private catalogService:CatalogCURDService,
+    private router: Router, private userloginService:UserloginService){
   }
   showImage!: boolean;
   showcatelog:boolean = true
@@ -81,8 +50,6 @@ visible:boolean = false
   confirm(){
     this.online =false;
     this.showImage = true;
-  
-    
      this.router.navigate(['/AddItem']);
   }
 
@@ -97,35 +64,64 @@ visible:boolean = false
   }
   buttonTitle:string = "CREATE NOW"; 
  
-
+  Email = localStorage.getItem('Email')
   ngOnInit(): void {
 
+    if(this.Email != '' && this.Email != undefined){
+      this.userloginService.setIsMainHeaderVisible(true); 
+    }
     this.imagedata1 = this.imageService.getImageData1();
     this.imagedata2 = this.imageService.getImageData2();
     this.imagedata3 = this.imageService.getImageData3();
-    this.catalogService.getBusinessByPhoneNumber().subscribe(
-      data => console.log("This is the catelog data :",data)
-    );
     
       this.imagedata = this.imageService.getImageData();
     this.catalogService.getImagesByPhoneNumber().subscribe(images1 => {
       console.log("catelog data",images1)
       this.images = images1;
-      // if( this.Images != "" ){
-      //   this.showImage = true;
-      //   this.showcatelog = false;
-      // }
-      // else{
-      //   this.showImage = true;
-      //   this.showcatelog = false;
-      // }
+      
       var dta = JSON.parse(JSON.stringify(images1));
+      console.log("dddd",dta);
       for(var i=0;i<dta.length;i++){
-        this.Images.push(dta[i][0])
+        const img = dta[i].urls[0];
+        this.Images.push(dta[i].urls[0]);
+        console.log("image 0 ",img.url);
+        //for(var j =0; j<img.length)
+     //   this.Images.push(dta[i][0])
+      }
+  //   images1.forEach(item => {
+  //     const imgUrl = item.urls[0].url; 
+  //     this.Images.push(imgUrl); 
+  //     console.log("image URL: ", imgUrl);
+  // });
+      if( this.Images != "" ){
+        this.showImage = false;
+        this.showcatelog = true;
+      }
+      else{
+        this.showImage = true;
+        this.showcatelog = false;
       }
 
-      console.log("catelog data",this.images)
-
     });
+  }
 
-  }}
+
+  ImageData(event: any) {
+    const imageName = event.target.dataset.imagename;
+    console.log("Image Name:", imageName); // Log imageName
+    this.catalogService.getFilesByPhoneNumber(this.phoneNumber, imageName).subscribe({
+      next: data => {
+        console.log("Retrieved Data:", data); // Log data retrieved
+        if (data) {
+          console.log("Found Data:", data.registrationnumber);
+        } else {
+          console.log("No data found for the provided phone number and image name.");
+        }
+      }
+    });
+  }
+  
+  
+  
+
+}
